@@ -1,0 +1,31 @@
+name: Compile face
+
+on: [ workflow_dispatch ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      - name: Get docker image and compile face
+        run: |
+          docker run --rm                          \
+            "--volume=`pwd`:/project"              \
+            --workdir /project                     \
+            ddls/esp32_platformio_compiler:latest  \
+            /bin/bash -c                           \
+            "pio run"
+      - name: Upload face binary artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: Watchy-QRCode-Face
+          path: .pio/build/esp32dev/firmware.bin
+      - name: Create release of face binary
+        uses: "marvinpinto/action-automatic-releases@latest"
+        with:
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          automatic_release_tag: "latest"
+          prerelease: false
+          title: "Development Build"
+          files: .pio/build/esp32dev/firmware.bin
